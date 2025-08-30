@@ -1,25 +1,42 @@
 // src/app/api/pulls/route.ts
 import axios from "axios";
 import { owner, repo } from "../url";
+import { readJSON, writeJSON } from "../storage";
 
 const levelScores: Record<string, number> = {
   level1: 10,
   level2: 20,
-  level3: 30, // extend as needed
+};
+
+const leaderboardKey = "leaderboard.json";
+
+// Minimal GitHub API types we rely on
+type GitHubLabel = { name: string };
+type GitHubIssue = {
+  number: number;
+  labels: GitHubLabel[];
+  pull_request?: unknown; // present on PRs returned from the issues API
+};
+type GitHubPull = {
+  html_url: string;
+  user: { login: string };
+  number: number;
+  title: string;
+  state: string;
+  body?: string;
+  commits_url: string;
 };
 
 export async function GET() {
-  // 1️⃣ Fetch all issues
-  const { data: issuesData } = await axios.get(
+  // Fetch issues
+  const { data: issuesData } = await axios.get<GitHubIssue[]>(
     `https://api.github.com/repos/${owner}/${repo}/issues?state=all`
   );
-
-  // Map issue number -> level name
   const issueMap: Record<number, { level: string; score: number }> = {};
   issuesData
-    .filter((i: any) => !i.pull_request)
-    .forEach((issue: any) => {
-      const levelLabel = issue.labels.find((l: any) => l.name.startsWith("level"));
+    .filter((i) => !i.pull_request)
+    .forEach((issue) => {
+      const levelLabel = issue.labels.find((l) => l.name.startsWith("level"));
       if (levelLabel) {
         issueMap[issue.number] = {
           level: levelLabel.name,
@@ -28,17 +45,19 @@ export async function GET() {
       }
     });
 
-  // 2️⃣ Fetch all PRs
-  const { data: pullsData } = await axios.get(
+  // Fetch PRs
+  const { data: pullsData } = await axios.get<GitHubPull[]>(
     `https://api.github.com/repos/${owner}/${repo}/pulls?state=all`
   );
 
-  // 3️⃣ Parse PRs for linked issues
-  const pulls = pullsData.map((pull: any) => {
+  const leaderboard = await readJSON<Record<string, number>>(leaderboardKey, {});
+
+  const pulls = pullsData.map((pull) => {
     const issueRegex = /#(\d+)/g;
     const matches = [...(pull.body?.matchAll(issueRegex) || [])];
+
     let totalScore = 0;
-    let levels: string[] = [];
+    const levels: string[] = [];
 
     matches.forEach((m) => {
       const issueNum = parseInt(m[1]);
@@ -48,6 +67,11 @@ export async function GET() {
       }
     });
 
+    // Update leaderboard
+    if (totalScore > 0) {
+      leaderboard[pull.user.login] = (leaderboard[pull.user.login] || 0) + totalScore;
+    }
+
     return {
       url: pull.html_url,
       user: pull.user.login,
@@ -55,13 +79,16 @@ export async function GET() {
       title: pull.title,
       state: pull.state,
       body: pull.body,
-      linkedLevels: levels, // array of levels PR is linked to
-      score: totalScore,    // total score based on linked issues
+      linkedLevels: levels,
+      score: totalScore,
       commits: pull.commits_url,
     };
   });
 
-  return Response.json(pulls, {
+  // Persist leaderboard
+  await writeJSON(leaderboardKey, leaderboard);
+
+  return Response.json({ pulls, leaderboard }, {
     status: 200,
     headers: { "Content-Type": "application/json" },
   });
