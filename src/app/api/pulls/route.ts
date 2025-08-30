@@ -9,12 +9,12 @@ export async function GET(req: Request) {
 
   // Send the raw array back, or pick only fields you need
   const pulls = data.map((pull: any) => ({
-    data: pull,
+    // data: pull,
     url:pull.url,
     user:pull.user.login,
     number:pull.number,
     title: pull.title,
-    status: pull.status,
+    state: pull.state,
     body: pull.body,
     issue: pull.issue_url,
     commits: pull.commits_url
