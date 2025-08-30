@@ -4,7 +4,7 @@ import { owner, repo } from "../url";
 
 export async function GET() {
   const { data } = await axios.get(
-    `https://api.github.com/repos/${owner}/${repo}/issues`,
+    `https://api.github.com/repos/${owner}/${repo}/issues?state=all`,
       
   );
 
