@@ -69,7 +69,7 @@ export async function writeJSON(filename: string, dataObj: any): Promise<void> {
       return;
     } catch (err) {
       // eslint-disable-next-line no-console
-      console.debug("redis write failed, falling back to memory", err);
+       console.debug("redis write failed, falling back to memory", err);
       redisAvailable = false;
       redisClient = null;
     }
