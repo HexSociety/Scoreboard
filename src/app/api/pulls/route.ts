@@ -35,7 +35,7 @@ export async function GET() {
     `https://api.github.com/repos/${owner}/${repo}/issues?state=all&per_page=100`,
     {
       headers: {
-        Authorization: `Bearer ${"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"}`,
+        Authorization: `Bearer ${process.env.GITHUB_SECRET}`,
       },
     }
   );
