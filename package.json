@@ -9,12 +9,14 @@
     "lint": "eslint"
   },
   "dependencies": {
-  "redis": "^5.8.2",
+    "@types/ioredis": "^5.0.0",
     "axios": "^1.11.0",
     "framer-motion": "^12.23.12",
+    "ioredis": "^5.7.0",
     "next": "^15.5.2",
     "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react-dom": "^19.1.1",
+    "redis": "^5.8.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

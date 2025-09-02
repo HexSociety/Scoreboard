@@ -2,10 +2,11 @@
 import axios from "axios";
 import { owner, repo } from "../url";
 import { readJSON, writeJSON } from "../storage";
+import { leaderboardService, POINTS } from "../redis";
 
 const levelScores: Record<string, number> = {
-  level1: 10,
-  level2: 20,
+  level1: POINTS.OPEN_PULL_REQUEST,
+  level2: POINTS.OPEN_PULL_REQUEST + 10,
 };
 
 const leaderboardKey = "leaderboard.json";
@@ -67,9 +68,16 @@ export async function GET() {
       }
     });
 
-    // Update leaderboard
+    // Update leaderboard in Redis and fallback storage
     if (totalScore > 0) {
       leaderboard[pull.user.login] = (leaderboard[pull.user.login] || 0) + totalScore;
+      
+      // Also update Redis leaderboard
+      leaderboardService.addPoints(
+        pull.user.login, 
+        totalScore, 
+        `PR #${pull.number}: ${pull.title}`
+      ).catch(console.error);
     }
 
     return {
