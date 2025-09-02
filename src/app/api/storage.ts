@@ -1,85 +1,79 @@
 // src/app/api/storage.ts
-// Lightweight persistent storage without a database.
-// Uses a GitHub Gist when GIST_ID and GITHUB_TOKEN are provided; falls back to local file otherwise.
+// Redis-backed persistent store with in-memory fallback.
+// Set REDIS_URL in the environment to enable Redis; otherwise we use memory store.
 
-import fs from "fs";
-import path from "path";
-import axios from "axios";
+import { createClient, RedisClientType } from "redis";
 
-const GIST_ID = process.env.GIST_ID;
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const REDIS_URL = process.env.REDIS_URL || process.env.REDIS;
 
-const isGistEnabled = Boolean(GIST_ID && GITHUB_TOKEN);
+const memoryStore: Record<string, any> = {};
 
-async function readFromGist(filename: string): Promise<any> {
-  const headers = {
-    Authorization: `Bearer ${GITHUB_TOKEN}`,
-    Accept: "application/vnd.github+json",
-    "User-Agent": "scoreboard-app",
-  };
+let redisClient: RedisClientType | null = null;
+let redisAvailable = false;
 
+async function initRedis() {
+  if (!REDIS_URL) return;
   try {
-    const { data } = await axios.get(`https://api.github.com/gists/${GIST_ID}`, {
-      headers,
+    redisClient = createClient({ url: REDIS_URL });
+    redisClient.on("error", (err: unknown) => {
+      // eslint-disable-next-line no-console
+      console.debug("redis error", err);
+      redisAvailable = false;
     });
-
-    const file = data.files?.[filename];
-    if (!file) return undefined;
-
-    if (file.truncated && file.raw_url) {
-      const raw = await axios.get<string>(file.raw_url, { headers });
-      return JSON.parse(raw.data);
-    }
-    return JSON.parse(file.content);
+    await redisClient.connect();
+    redisAvailable = true;
+    // eslint-disable-next-line no-console
+    console.debug("redis connected");
   } catch (err) {
-    // If not found or any error, treat as empty
-    return undefined;
+    // Fail silently and fall back to memory store
+    // eslint-disable-next-line no-console
+    console.debug("redis init failed, using memory store", err);
+    redisAvailable = false;
+    redisClient = null;
   }
 }
 
-async function writeToGist(filename: string, dataObj: any): Promise<void> {
-  const headers = {
-    Authorization: `Bearer ${GITHUB_TOKEN}`,
-    Accept: "application/vnd.github+json",
-    "User-Agent": "scoreboard-app",
-  };
+void initRedis();
 
-  const body = {
-    files: {
-      [filename]: {
-        content: JSON.stringify(dataObj, null, 2),
-      },
-    },
-  };
-
-  await axios.patch(`https://api.github.com/gists/${GIST_ID}`, body, { headers });
-}
-
-function readFromFile(filename: string): any {
-  const filePath = path.join(process.cwd(), filename);
-  if (!fs.existsSync(filePath)) return undefined;
-  const raw = fs.readFileSync(filePath, "utf-8");
-  return JSON.parse(raw);
-}
-
-function writeToFile(filename: string, dataObj: any): void {
-  const filePath = path.join(process.cwd(), filename);
-  fs.writeFileSync(filePath, JSON.stringify(dataObj, null, 2), "utf-8");
+function deepClone<T>(v: T): T {
+  return JSON.parse(JSON.stringify(v));
 }
 
 export async function readJSON<T = any>(filename: string, fallback: T): Promise<T> {
-  if (isGistEnabled) {
-    const data = await readFromGist(filename);
-    return (data ?? fallback) as T;
+  if (redisAvailable && redisClient) {
+    try {
+      const raw = await redisClient.get(filename);
+      if (raw == null) return fallback;
+      return JSON.parse(raw) as T;
+    } catch (err) {
+      // degrade to memory store on error
+      // eslint-disable-next-line no-console
+      console.debug("redis read failed, falling back to memory", err);
+      redisAvailable = false;
+      redisClient = null;
+    }
   }
-  const data = readFromFile(filename);
-  return (data ?? fallback) as T;
+
+  if (Object.prototype.hasOwnProperty.call(memoryStore, filename)) {
+    return deepClone(memoryStore[filename]) as T;
+  }
+  return fallback;
 }
 
 export async function writeJSON(filename: string, dataObj: any): Promise<void> {
-  if (isGistEnabled) {
-    await writeToGist(filename, dataObj);
-    return;
+  const payload = JSON.stringify(dataObj);
+
+  if (redisAvailable && redisClient) {
+    try {
+      await redisClient.set(filename, payload);
+      return;
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.debug("redis write failed, falling back to memory", err);
+      redisAvailable = false;
+      redisClient = null;
+    }
   }
-  writeToFile(filename, dataObj);
+
+  memoryStore[filename] = deepClone(dataObj);
 }
