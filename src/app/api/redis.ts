@@ -157,6 +157,49 @@ export class LeaderboardService {
       return [];
     }
   }
+
+  // Track processed PRs to prevent duplicate scoring
+  async hasPRBeenProcessed(prNumber: number): Promise<boolean> {
+    const client = await this.getClient();
+    if (!client || !client.isReady) {
+      return false;
+    }
+
+    try {
+      const result = await client.sIsMember('processed_prs', prNumber.toString());
+      return result;
+    } catch (error) {
+      console.error('Failed to check if PR was processed:', error);
+      return false;
+    }
+  }
+
+  async markPRAsProcessed(prNumber: number): Promise<void> {
+    const client = await this.getClient();
+    if (!client || !client.isReady) {
+      return;
+    }
+
+    try {
+      await client.sAdd('processed_prs', prNumber.toString());
+    } catch (error) {
+      console.error('Failed to mark PR as processed:', error);
+    }
+  }
+
+  // Method to add points only if PR hasn't been processed
+  async addPointsForPR(username: string, points: number, prNumber: number, action: string): Promise<boolean> {
+    const alreadyProcessed = await this.hasPRBeenProcessed(prNumber);
+    if (alreadyProcessed) {
+      console.log(`PR #${prNumber} already processed, skipping points award`);
+      return false;
+    }
+
+    await this.addPoints(username, points, action);
+    await this.markPRAsProcessed(prNumber);
+    console.log(`Awarded ${points} points to ${username} for PR #${prNumber}`);
+    return true;
+  }
 }
 
 export const leaderboardService = new LeaderboardService();

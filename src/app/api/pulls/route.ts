@@ -69,11 +69,12 @@ export async function GET() {
       // Add base points for merged PR
       totalScore += POINTS.MERGED_PR;
 
-      // Award points to PR author (not committer)
+      // Award points to PR author (not committer) - only if not already processed
       if (totalScore > 0) {
-        leaderboardService.addPoints(
+        leaderboardService.addPointsForPR(
           pull.user.login, 
           totalScore, 
+          pull.number,
           `Merged PR #${pull.number}: ${pull.title}`
         ).catch(console.error);
       }
