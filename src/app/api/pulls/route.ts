@@ -6,6 +6,9 @@ import { leaderboardService, POINTS } from "../redis";
 const levelScores: Record<string, number> = {
   level1: 10,
   level2: 20,
+  level3: 30,
+  level4: 40,
+  level5: 50,
 };
 
 // Minimal GitHub API types we rely on
@@ -29,7 +32,12 @@ type GitHubPull = {
 export async function GET() {
   // Fetch issues
   const { data: issuesData } = await axios.get<GitHubIssue[]>(
-    `https://api.github.com/repos/${owner}/${repo}/issues?state=all`
+    `https://api.github.com/repos/${owner}/${repo}/issues?state=all&per_page=100`,
+    {
+      headers: {
+        Authorization: `Bearer ${"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"}`,
+      },
+    }
   );
   const issueMap: Record<number, { level: string; score: number }> = {};
   issuesData
@@ -46,7 +54,12 @@ export async function GET() {
 
   // Fetch PRs
   const { data: pullsData } = await axios.get<GitHubPull[]>(
-    `https://api.github.com/repos/${owner}/${repo}/pulls?state=all`
+    `https://api.github.com/repos/${owner}/${repo}/pulls?state=all`,
+    {
+      headers: {
+        Authorization: `Bearer ${"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"}`,
+      },
+    }
   );
 
   const pulls = pullsData.map((pull) => {
@@ -72,8 +85,8 @@ export async function GET() {
       // Award points to PR author (not committer) - only if not already processed
       if (totalScore > 0) {
         leaderboardService.addPointsForPR(
-          pull.user.login, 
-          totalScore, 
+          pull.user.login,
+          totalScore,
           pull.number,
           `Merged PR #${pull.number}: ${pull.title}`
         ).catch(console.error);
@@ -98,8 +111,8 @@ export async function GET() {
   // Get current leaderboard from Redis
   const leaderboard = await leaderboardService.getLeaderboard(50);
 
-  return Response.json({ 
-    pulls, 
+  return Response.json({
+    pulls,
     leaderboard: leaderboard.reduce((acc, entry) => {
       acc[entry.username] = entry.score;
       return acc;

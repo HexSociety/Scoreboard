@@ -167,7 +167,7 @@ export class LeaderboardService {
 
     try {
       const result = await client.sIsMember('processed_prs', prNumber.toString());
-      return result;
+      return result === 1;
     } catch (error) {
       console.error('Failed to check if PR was processed:', error);
       return false;

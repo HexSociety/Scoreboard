@@ -17,7 +17,12 @@ function excerptFromBody(body: string | null, max = 220) {
 
 export async function GET() {
   const { data } = await axios.get(
-    `https://api.github.com/repos/${owner}/${repo}/issues?state=all&per_page=100`
+    `https://api.github.com/repos/${owner}/${repo}/issues?state=all&per_page=100`,
+    {
+      headers: {
+        Authorization: `Bearer ${"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"}`,
+      },
+    }
   );
 
   const issues = data
