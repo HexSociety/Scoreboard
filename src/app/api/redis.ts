@@ -1,112 +1,159 @@
-// src/app/api/redis.ts
-import Redis from 'ioredis';
+import { createClient, RedisClientType } from 'redis';
 
-let redis: Redis | null = null;
+let redis: RedisClientType | null = null;
+let isConnecting = false;
+let connectionAttempts = 0;
+const MAX_CONNECTION_ATTEMPTS = 3;
 
-export function getRedisClient(): Redis | null {
+export async function getRedisClient(): Promise<RedisClientType | null> {
   if (typeof window !== 'undefined') {
     // Client-side, no Redis
     return null;
   }
 
-  if (!redis) {
-    const redisUrl = process.env.REDIS_URL;
-    if (!redisUrl) {
-      console.warn('REDIS_URL not configured, using fallback storage');
-      return null;
-    }
-
-    try {
-      redis = new Redis(redisUrl);
-      
-      redis.on('error', (err) => {
-        console.error('Redis connection error:', err);
-      });
-    } catch (error) {
-      console.error('Failed to create Redis client:', error);
-      return null;
-    }
+  // If we have a connected client, return it
+  if (redis && redis.isReady) {
+    return redis;
   }
 
-  return redis;
+  // If we're already connecting, wait a bit and return null
+  if (isConnecting) {
+    return null;
+  }
+
+  // If we've exceeded max attempts, return null
+  if (connectionAttempts >= MAX_CONNECTION_ATTEMPTS) {
+    return null;
+  }
+
+  const redisUrl = "rediss://red-d2pjo1ur433s73dd2vcg:e1EtnyipaurxKOirvT8n0u5RjPNNLKqF@oregon-keyvalue.render.com:6379";
+  if (!redisUrl) {
+    console.warn('REDIS_URL not configured');
+    return null;
+  }
+
+  try {
+    isConnecting = true;
+    connectionAttempts++;
+    
+    // Create a new client with better error handling
+    redis = createClient({ 
+      url: redisUrl,
+      socket: {
+        reconnectStrategy: false, // Disable auto-reconnect to prevent loops
+        connectTimeout: 5000,
+      }
+    });
+    
+    redis.on('error', (err) => {
+      console.error(`Redis connection error (attempt ${connectionAttempts}):`, err.message);
+      redis = null;
+      isConnecting = false;
+    });
+
+    redis.on('ready', () => {
+      console.log('Redis client ready');
+      isConnecting = false;
+      connectionAttempts = 0; // Reset on successful connection
+    });
+
+    redis.on('end', () => {
+      console.log('Redis connection ended');
+      redis = null;
+      isConnecting = false;
+    });
+
+    // Connect with timeout
+    await redis.connect();
+    return redis;
+    
+  } catch (error) {
+    console.error(`Failed to create Redis client (attempt ${connectionAttempts}):`, error);
+    redis = null;
+    isConnecting = false;
+    return null;
+  }
 }
 
 // Points system constants
 export const POINTS = {
-  CREATE_ISSUE: 5,
-  OPEN_PULL_REQUEST: 10,
-  REVIEW_PULL_REQUEST: 8,
-  MERGE_PULL_REQUEST: 20,
-  CLOSE_ISSUE_OR_PR: 3,
+  MERGED_PR: 20,  // Only merged PRs get points
 } as const;
 
-// Leaderboard operations
+// Leaderboard operations - Redis only, no fallbacks
 export class LeaderboardService {
-  private redis: Redis | null;
-  private fallbackData: Record<string, number> = {};
-
-  constructor() {
-    this.redis = getRedisClient();
+  private async getClient(): Promise<RedisClientType | null> {
+    return await getRedisClient();
   }
 
   async addPoints(username: string, points: number, action: string): Promise<void> {
-    if (this.redis) {
-      await this.redis.zincrby('leaderboard', points, username);
-      await this.redis.lpush(`user:${username}:actions`, JSON.stringify({
+    const client = await this.getClient();
+    if (!client || !client.isReady) {
+      console.warn('Redis not available - points not recorded');
+      return;
+    }
+
+    try {
+      await client.zIncrBy('leaderboard', points, username);
+      await client.lPush(`user:${username}:actions`, JSON.stringify({
         action,
         points,
         timestamp: new Date().toISOString(),
       }));
-      await this.redis.ltrim(`user:${username}:actions`, 0, 99); // Keep last 100 actions
-    } else {
-      // Fallback to in-memory storage
-      this.fallbackData[username] = (this.fallbackData[username] || 0) + points;
+      await client.lTrim(`user:${username}:actions`, 0, 99);
+      console.log(`Added ${points} points to ${username} for ${action}`);
+    } catch (error) {
+      console.error('Failed to add points:', error);
     }
   }
 
   async getLeaderboard(limit: number = 10): Promise<Array<{ username: string; score: number; rank: number }>> {
-    if (this.redis) {
-      const results = await this.redis.zrevrange('leaderboard', 0, limit - 1, 'WITHSCORES');
-      const leaderboard = [];
+    const client = await this.getClient();
+    if (!client || !client.isReady) {
+      console.warn('Redis not available - returning empty leaderboard');
+      return [];
+    }
+
+    try {
+      const results = await client.zRangeWithScores('leaderboard', 0, limit - 1, { REV: true });
       
-      for (let i = 0; i < results.length; i += 2) {
-        const username = results[i] as string;
-        const score = parseInt(results[i + 1] as string, 10);
-        leaderboard.push({
-          username,
-          score,
-          rank: Math.floor(i / 2) + 1,
-        });
-      }
-      
-      return leaderboard;
-    } else {
-      // Fallback
-      return Object.entries(this.fallbackData)
-        .sort(([, a], [, b]) => b - a)
-        .slice(0, limit)
-        .map(([username, score], index) => ({
-          username,
-          score,
-          rank: index + 1,
-        }));
+      return results.map((result, index) => ({
+        username: result.value,
+        score: result.score,
+        rank: index + 1,
+      }));
+    } catch (error) {
+      console.error('Failed to get leaderboard:', error);
+      return [];
     }
   }
 
   async getUserScore(username: string): Promise<number> {
-    if (this.redis) {
-      const score = await this.redis.zscore('leaderboard', username);
-      return score ? parseInt(score, 10) : 0;
-    } else {
-      return this.fallbackData[username] || 0;
+    const client = await this.getClient();
+    if (!client || !client.isReady) {
+      return 0;
+    }
+
+    try {
+      const score = await client.zScore('leaderboard', username);
+      return score || 0;
+    } catch (error) {
+      console.error('Failed to get user score:', error);
+      return 0;
     }
   }
 
   async getUserActions(username: string, limit: number = 20): Promise<Array<{ action: string; points: number; timestamp: string }>> {
-    if (this.redis) {
-      const actions = await this.redis.lrange(`user:${username}:actions`, 0, limit - 1);
+    const client = await this.getClient();
+    if (!client || !client.isReady) {
+      return [];
+    }
+
+    try {
+      const actions = await client.lRange(`user:${username}:actions`, 0, limit - 1);
       return actions.map(action => JSON.parse(action));
-    } else {
+    } catch (error) {
+      console.error('Failed to get user actions:', error);
       return [];
     }
   }

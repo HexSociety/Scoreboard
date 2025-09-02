@@ -1,15 +1,12 @@
 // src/app/api/pulls/route.ts
 import axios from "axios";
 import { owner, repo } from "../url";
-import { readJSON, writeJSON } from "../storage";
 import { leaderboardService, POINTS } from "../redis";
 
 const levelScores: Record<string, number> = {
-  level1: POINTS.OPEN_PULL_REQUEST,
-  level2: POINTS.OPEN_PULL_REQUEST + 10,
+  level1: 10,
+  level2: 20,
 };
-
-const leaderboardKey = "leaderboard.json";
 
 // Minimal GitHub API types we rely on
 type GitHubLabel = { name: string };
@@ -24,6 +21,7 @@ type GitHubPull = {
   number: number;
   title: string;
   state: string;
+  merged_at: string | null;
   body?: string;
   commits_url: string;
 };
@@ -51,8 +49,6 @@ export async function GET() {
     `https://api.github.com/repos/${owner}/${repo}/pulls?state=all`
   );
 
-  const leaderboard = await readJSON<Record<string, number>>(leaderboardKey, {});
-
   const pulls = pullsData.map((pull) => {
     const issueRegex = /#(\d+)/g;
     const matches = [...(pull.body?.matchAll(issueRegex) || [])];
@@ -60,24 +56,27 @@ export async function GET() {
     let totalScore = 0;
     const levels: string[] = [];
 
-    matches.forEach((m) => {
-      const issueNum = parseInt(m[1]);
-      if (issueMap[issueNum]) {
-        levels.push(issueMap[issueNum].level);
-        totalScore += issueMap[issueNum].score;
-      }
-    });
+    // Only count points for merged PRs
+    if (pull.merged_at) {
+      matches.forEach((m) => {
+        const issueNum = parseInt(m[1]);
+        if (issueMap[issueNum]) {
+          levels.push(issueMap[issueNum].level);
+          totalScore += issueMap[issueNum].score;
+        }
+      });
 
-    // Update leaderboard in Redis and fallback storage
-    if (totalScore > 0) {
-      leaderboard[pull.user.login] = (leaderboard[pull.user.login] || 0) + totalScore;
-      
-      // Also update Redis leaderboard
-      leaderboardService.addPoints(
-        pull.user.login, 
-        totalScore, 
-        `PR #${pull.number}: ${pull.title}`
-      ).catch(console.error);
+      // Add base points for merged PR
+      totalScore += POINTS.MERGED_PR;
+
+      // Award points to PR author (not committer)
+      if (totalScore > 0) {
+        leaderboardService.addPoints(
+          pull.user.login, 
+          totalScore, 
+          `Merged PR #${pull.number}: ${pull.title}`
+        ).catch(console.error);
+      }
     }
 
     return {
@@ -86,6 +85,8 @@ export async function GET() {
       number: pull.number,
       title: pull.title,
       state: pull.state,
+      merged: !!pull.merged_at,
+      merged_at: pull.merged_at,
       body: pull.body,
       linkedLevels: levels,
       score: totalScore,
@@ -93,10 +94,16 @@ export async function GET() {
     };
   });
 
-  // Persist leaderboard
-  await writeJSON(leaderboardKey, leaderboard);
+  // Get current leaderboard from Redis
+  const leaderboard = await leaderboardService.getLeaderboard(50);
 
-  return Response.json({ pulls, leaderboard }, {
+  return Response.json({ 
+    pulls, 
+    leaderboard: leaderboard.reduce((acc, entry) => {
+      acc[entry.username] = entry.score;
+      return acc;
+    }, {} as Record<string, number>)
+  }, {
     status: 200,
     headers: { "Content-Type": "application/json" },
   });
