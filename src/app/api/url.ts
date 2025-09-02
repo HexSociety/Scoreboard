@@ -1,3 +1,3 @@
-export const url="https://github.com/haard18/ship-it-users"
+export const url="https://github.com/haard18/test"
 export const owner="haard18"
-export const repo="ship-it-users"
+export const repo="test"
