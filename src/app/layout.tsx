@@ -32,7 +32,7 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.ico" sizes="any" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 bg-dots-pattern text-black pt-20`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 bg-dots-pattern text-black pt-32 lg:pt-32`}
         >
         <Navbar/>
         <div className="relative z-10">
