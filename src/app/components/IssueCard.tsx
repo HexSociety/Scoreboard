@@ -3,9 +3,9 @@ import React, { useState, useMemo } from "react";
 import { useIssues, Issue } from "../hooks/useIssues";
 
 const colors: Record<string, string> = {
-  level1: "bg-pink-300",
-  level2: "bg-yellow-300",
-  default: "bg-gray-200",
+  level1: "bg-gradient-to-br from-pink-200 to-pink-300",
+  level2: "bg-gradient-to-br from-yellow-200 to-yellow-300",
+  default: "bg-gradient-to-br from-gray-100 to-gray-200",
 };
 
 function timeAgo(iso?: string) {
@@ -74,51 +74,79 @@ const IssueCard = () => {
   }, [issues, statusFilter, levelFirst]);
 
   return (
-    <div className="p-8">
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <button
-            className={`px-3 py-1 border rounded ${statusFilter === "all" ? "bg-black text-white" : "bg-white"}`}
-            onClick={() => setStatusFilter("all")}
-          >
-            All
-          </button>
-          <button
-            className={`px-3 py-1 border rounded ${statusFilter === "open" ? "bg-black text-white" : "bg-white"}`}
-            onClick={() => setStatusFilter("open")}
-          >
-            Open
-          </button>
-          <button
-            className={`px-3 py-1 border rounded ${statusFilter === "closed" ? "bg-black text-white" : "bg-white"}`}
-            onClick={() => setStatusFilter("closed")}
-          >
-            Closed
-          </button>
+    <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-6 bg-white/80 border-4 border-black neobrutalist-shadow rounded-2xl">
+        <div className="flex items-center gap-3">
+          <span className="text-lg font-bold">🔍 Filter:</span>
+          <div className="flex gap-2">
+            <button
+              className={`px-4 py-2 border-2 border-black font-bold rounded-lg transition-all hover-lift ${
+                statusFilter === "all" 
+                  ? "bg-purple-400 text-white neobrutalist-shadow" 
+                  : "bg-white hover:bg-purple-100"
+              }`}
+              onClick={() => setStatusFilter("all")}
+            >
+              📋 All
+            </button>
+            <button
+              className={`px-4 py-2 border-2 border-black font-bold rounded-lg transition-all hover-lift ${
+                statusFilter === "open" 
+                  ? "bg-green-400 text-white neobrutalist-shadow" 
+                  : "bg-white hover:bg-green-100"
+              }`}
+              onClick={() => setStatusFilter("open")}
+            >
+              🟢 Open
+            </button>
+            <button
+              className={`px-4 py-2 border-2 border-black font-bold rounded-lg transition-all hover-lift ${
+                statusFilter === "closed" 
+                  ? "bg-red-400 text-white neobrutalist-shadow" 
+                  : "bg-white hover:bg-red-100"
+              }`}
+              onClick={() => setStatusFilter("closed")}
+            >
+              🔴 Closed
+            </button>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2 text-sm">
-          <label className="flex items-center gap-2">
-            <input type="checkbox" checked={levelFirst} onChange={(e) => setLevelFirst(e.target.checked)} />
-            Level-first sorting
+        <div className="flex items-center gap-3">
+          <label className="flex items-center gap-2 font-medium cursor-pointer">
+            <input 
+              type="checkbox" 
+              checked={levelFirst} 
+              onChange={(e) => setLevelFirst(e.target.checked)}
+              className="w-4 h-4 border-2 border-black rounded"
+            />
+            <span>⚡ Level-first sorting</span>
           </label>
         </div>
       </div>
       {Object.keys(grouped).map((level) => (
-        <div key={level} className="mb-8">
-          <h2 className="text-2xl font-black mb-4 px-4 py-2 border-4 border-black bg-white inline-block shadow-[6px_6px_0px_black]">
-            {level.toUpperCase()}
-          </h2>
-          <div className="grid md:grid-cols-2 gap-6">
+        <div key={level} className="mb-12">
+          <div className="flex items-center gap-3 mb-6">
+            <h2 className="text-2xl md:text-3xl font-black px-6 py-3 border-4 border-black bg-white neobrutalist-shadow-lg rounded-xl">
+              {level === "level1" && "🥉"} 
+              {level === "level2" && "🥈"} 
+              {level === "unlabeled" && "📋"} 
+              {level.toUpperCase()}
+            </h2>
+            <div className="text-sm font-medium text-gray-600">
+              {grouped[level].length} issue{grouped[level].length !== 1 ? 's' : ''}
+            </div>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {grouped[level].map((issue) => (
               <a
                 key={issue.id}
                 href={issue.html_url || issue.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`p-6 border-4 border-black shadow-[6px_6px_0px_black] rounded-2xl font-bold hover:scale-105 transition-transform cursor-pointer ${
+                className={`group p-6 border-4 border-black neobrutalist-shadow-lg rounded-2xl font-bold hover-lift cursor-pointer transition-all duration-300 ${
                   colors[issue.labels?.[0]?.name] || colors.default
-                }`}
+                } hover:scale-[1.02]`}
               >
                 <div className="flex items-start gap-4">
                   {issue.user?.avatar_url ? (

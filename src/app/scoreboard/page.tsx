@@ -75,173 +75,263 @@ export default function ScoreboardPage() {
 
   if (loading) {
     return (
-      <main className="w-full max-w-6xl mx-auto px-6 md:px-8 py-10">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-2xl font-bold">Loading scoreboard...</div>
+      <div className="min-h-screen relative">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/4 left-1/6 w-32 h-32 bg-yellow-300/10 rounded-full blur-xl"></div>
+          <div className="absolute top-3/4 right-1/6 w-40 h-40 bg-purple-300/10 rounded-full blur-xl"></div>
         </div>
-      </main>
+        <div className="relative z-10 flex items-center justify-center min-h-screen">
+          <div className="p-8 bg-white border-4 border-black neobrutalist-shadow-lg rounded-2xl">
+            <div className="text-2xl font-bold text-center">🏆 Loading scoreboard...</div>
+          </div>
+        </div>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <main className="w-full max-w-6xl mx-auto px-6 md:px-8 py-10">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-2xl font-bold text-red-600">{error}</div>
+      <div className="min-h-screen relative">
+        <div className="relative z-10 flex items-center justify-center min-h-screen">
+          <div className="p-8 bg-red-100 border-4 border-black neobrutalist-shadow-lg rounded-2xl">
+            <div className="text-2xl font-bold text-red-600 text-center">❌ {error}</div>
+          </div>
         </div>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="w-full max-w-6xl mx-auto px-6 md:px-8 py-10">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <h1 className="text-4xl font-black mb-8 px-6 py-3 border-4 border-black bg-white shadow-[6px_6px_0px_black] inline-block rounded-lg">
-          🏆 Global Scoreboard
-        </h1>
+    <div className="min-h-screen relative">
+      {/* Background decorative elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/6 w-32 h-32 bg-yellow-300/10 rounded-full blur-xl"></div>
+        <div className="absolute top-3/4 right-1/6 w-40 h-40 bg-purple-300/10 rounded-full blur-xl"></div>
+        <div className="absolute top-1/2 left-3/4 w-24 h-24 bg-green-300/10 rounded-full blur-xl"></div>
+      </div>
+      
+      <div className="relative z-10 pt-8">
+        <div className="text-center mb-8">
+          <h1 className="inline-flex items-center gap-3 text-3xl md:text-4xl font-black px-8 py-4 bg-white border-4 border-black neobrutalist-shadow-lg rounded-2xl">
+            <span className="text-2xl">🏆</span>
+            Global Scoreboard
+          </h1>
+          <p className="mt-4 text-lg text-gray-700 max-w-2xl mx-auto px-4">
+            See who&apos;s leading the Ship-It competition! Click on any player to view their activity.
+          </p>
+        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Leaderboard */}
-          <div className="lg:col-span-2">
-            <div className="space-y-4">
-              {leaderboard.map((entry, index) => (
-                <motion.div
-                  key={entry.username}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  onClick={() => fetchUserDetails(entry.username)}
-                  className={`p-6 border-4 border-black shadow-[6px_6px_0px_black] rounded-2xl cursor-pointer hover:scale-105 transition-transform ${
-                    entry.rank === 1
-                      ? "bg-yellow-300"
-                      : entry.rank === 2
-                      ? "bg-gray-300"
-                      : entry.rank === 3
-                      ? "bg-orange-300"
-                      : "bg-white"
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="text-2xl font-black">
-                        {entry.rank === 1 ? "🥇" : entry.rank === 2 ? "🥈" : entry.rank === 3 ? "🥉" : `#${entry.rank}`}
+        <main className="max-w-7xl mx-auto px-6 py-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Enhanced Leaderboard */}
+              <div className="lg:col-span-2">
+                <div className="space-y-4">
+                  {leaderboard.map((entry, index) => (
+                    <motion.div
+                      key={entry.username}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      onClick={() => fetchUserDetails(entry.username)}
+                      className={`group p-6 border-4 border-black neobrutalist-shadow-lg rounded-2xl cursor-pointer hover-lift transition-all duration-300 ${
+                        entry.rank === 1
+                          ? "bg-gradient-to-br from-yellow-200 to-yellow-300"
+                          : entry.rank === 2
+                          ? "bg-gradient-to-br from-gray-200 to-gray-300"
+                          : entry.rank === 3
+                          ? "bg-gradient-to-br from-orange-200 to-orange-300"
+                          : "bg-gradient-to-br from-white to-gray-100"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="text-3xl font-black flex flex-col items-center">
+                            <span>
+                              {entry.rank === 1 ? "🥇" : entry.rank === 2 ? "🥈" : entry.rank === 3 ? "🥉" : `#${entry.rank}`}
+                            </span>
+                            {entry.rank <= 3 && (
+                              <div className="text-xs font-bold mt-1">
+                                {entry.rank === 1 && "CHAMPION"}
+                                {entry.rank === 2 && "RUNNER-UP"}
+                                {entry.rank === 3 && "THIRD"}
+                              </div>
+                            )}
+                          </div>
+                          <div>
+                            <h3 className="text-xl font-bold group-hover:text-purple-700 transition-colors">
+                              {entry.username}
+                            </h3>
+                            <p className="text-sm text-black/70 flex items-center gap-2">
+                              📈 Rank #{entry.rank}
+                              <span className="px-2 py-1 bg-white/70 border border-black rounded-lg text-xs font-medium">
+                                Click for details
+                              </span>
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-3xl font-black text-purple-600 group-hover:scale-110 transition-transform">
+                            {entry.score}
+                          </div>
+                          <div className="text-sm text-black/70 font-bold">⚡ points</div>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="text-xl font-bold">{entry.username}</h3>
-                        <p className="text-sm text-black/70">Rank #{entry.rank}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-3xl font-black">{entry.score}</div>
-                      <div className="text-sm text-black/70">points</div>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
+                    </motion.div>
+                  ))}
 
-              {leaderboard.length === 0 && (
-                <div className="text-center py-12 px-6 border-4 border-black bg-gray-100 rounded-2xl">
-                  <h3 className="text-xl font-bold mb-2">No scores yet</h3>
-                  <p className="text-gray-600">
-                    Be the first to contribute and earn points!
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Sidebar */}
-          <div className="lg:col-span-1 space-y-6">
-            {/* Points System */}
-            {pointsSystem && (
-              <div className="sticky top-24">
-                <h2 className="text-2xl font-black mb-4 px-4 py-2 border-4 border-black bg-white inline-block shadow-[6px_6px_0px_black] rounded-lg">
-                  🎮 Points System
-                </h2>
-                <div className="space-y-3">
-                  <div className="p-4 border-4 border-black bg-pink-300 shadow-[4px_4px_0px_black] rounded-xl">
-                    <div className="text-sm font-bold mb-1">Create Issue</div>
-                    <div className="text-2xl font-black">+{pointsSystem.CREATE_ISSUE}</div>
-                  </div>
-                  <div className="p-4 border-4 border-black bg-blue-300 shadow-[4px_4px_0px_black] rounded-xl">
-                    <div className="text-sm font-bold mb-1">Open Pull Request</div>
-                    <div className="text-2xl font-black">+{pointsSystem.OPEN_PULL_REQUEST}</div>
-                  </div>
-                  <div className="p-4 border-4 border-black bg-purple-300 shadow-[4px_4px_0px_black] rounded-xl">
-                    <div className="text-sm font-bold mb-1">Review PR</div>
-                    <div className="text-2xl font-black">+{pointsSystem.REVIEW_PULL_REQUEST}</div>
-                  </div>
-                  <div className="p-4 border-4 border-black bg-green-300 shadow-[4px_4px_0px_black] rounded-xl">
-                    <div className="text-sm font-bold mb-1">Merge PR</div>
-                    <div className="text-2xl font-black">+{pointsSystem.MERGE_PULL_REQUEST}</div>
-                  </div>
-                  <div className="p-4 border-4 border-black bg-orange-300 shadow-[4px_4px_0px_black] rounded-xl">
-                    <div className="text-sm font-bold mb-1">Close Issue/PR</div>
-                    <div className="text-2xl font-black">+{pointsSystem.CLOSE_ISSUE_OR_PR}</div>
-                  </div>
+                  {leaderboard.length === 0 && (
+                    <div className="text-center py-12 px-6 border-4 border-black bg-gradient-to-br from-gray-100 to-gray-200 neobrutalist-shadow rounded-2xl">
+                      <div className="text-6xl mb-4">🏆</div>
+                      <h3 className="text-xl font-bold mb-2">No scores yet</h3>
+                      <p className="text-gray-600">
+                        Be the first to contribute and earn points!
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
-            )}
 
-            {/* User Details Modal */}
+              {/* Enhanced Sidebar */}
+              <div className="lg:col-span-1 space-y-6">
+                {/* Points System */}
+                {pointsSystem && (
+                  <div className="sticky top-24">
+                    <h2 className="text-xl md:text-2xl font-black mb-6 px-4 py-3 border-4 border-black bg-white neobrutalist-shadow-lg inline-block rounded-xl">
+                      🎮 Points System
+                    </h2>
+                    <div className="space-y-3">
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.1 }}
+                        className="p-4 border-4 border-black bg-gradient-to-br from-pink-200 to-pink-300 neobrutalist-shadow rounded-xl hover-lift"
+                      >
+                        <div className="flex items-center gap-2 text-sm font-bold mb-1">
+                          <span>📝</span> Create Issue
+                        </div>
+                        <div className="text-2xl font-black text-purple-600">+{pointsSystem.CREATE_ISSUE}</div>
+                      </motion.div>
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.2 }}
+                        className="p-4 border-4 border-black bg-gradient-to-br from-blue-200 to-blue-300 neobrutalist-shadow rounded-xl hover-lift"
+                      >
+                        <div className="flex items-center gap-2 text-sm font-bold mb-1">
+                          <span>🔀</span> Open Pull Request
+                        </div>
+                        <div className="text-2xl font-black text-purple-600">+{pointsSystem.OPEN_PULL_REQUEST}</div>
+                      </motion.div>
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.3 }}
+                        className="p-4 border-4 border-black bg-gradient-to-br from-purple-200 to-purple-300 neobrutalist-shadow rounded-xl hover-lift"
+                      >
+                        <div className="flex items-center gap-2 text-sm font-bold mb-1">
+                          <span>👀</span> Review PR
+                        </div>
+                        <div className="text-2xl font-black text-purple-600">+{pointsSystem.REVIEW_PULL_REQUEST}</div>
+                      </motion.div>
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.4 }}
+                        className="p-4 border-4 border-black bg-gradient-to-br from-green-200 to-green-300 neobrutalist-shadow rounded-xl hover-lift"
+                      >
+                        <div className="flex items-center gap-2 text-sm font-bold mb-1">
+                          <span>✅</span> Merge PR
+                        </div>
+                        <div className="text-2xl font-black text-purple-600">+{pointsSystem.MERGE_PULL_REQUEST}</div>
+                      </motion.div>
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.5 }}
+                        className="p-4 border-4 border-black bg-gradient-to-br from-orange-200 to-orange-300 neobrutalist-shadow rounded-xl hover-lift"
+                      >
+                        <div className="flex items-center gap-2 text-sm font-bold mb-1">
+                          <span>🔒</span> Close Issue/PR
+                        </div>
+                        <div className="text-2xl font-black text-purple-600">+{pointsSystem.CLOSE_ISSUE_OR_PR}</div>
+                      </motion.div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Enhanced User Details Modal */}
             {selectedUser && userDetails && (
               <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50"
                 onClick={() => setSelectedUser(null)}
               >
-                <div
-                  className="bg-white border-4 border-black shadow-[8px_8px_0px_black] rounded-2xl p-6 max-w-md w-full max-h-[80vh] overflow-y-auto"
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.9, opacity: 0 }}
+                  className="bg-white border-4 border-black neobrutalist-shadow-xl rounded-2xl p-6 max-w-md w-full max-h-[80vh] overflow-y-auto"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-2xl font-black">{userDetails.username}</h3>
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-2xl font-black flex items-center gap-2">
+                      <span>👤</span> {userDetails.username}
+                    </h3>
                     <button
                       onClick={() => setSelectedUser(null)}
-                      className="text-2xl font-bold hover:bg-gray-100 w-8 h-8 rounded-full"
+                      className="text-2xl font-bold hover:bg-gray-100 w-10 h-10 rounded-full border-2 border-black hover-lift transition-all"
                     >
                       ×
                     </button>
                   </div>
                   
                   <div className="mb-6">
-                    <div className="text-center p-4 bg-yellow-300 border-4 border-black rounded-xl">
-                      <div className="text-3xl font-black">{userDetails.score}</div>
-                      <div className="text-sm font-bold">Total Points</div>
+                    <div className="text-center p-6 bg-gradient-to-br from-yellow-200 to-yellow-300 border-4 border-black neobrutalist-shadow rounded-xl">
+                      <div className="text-4xl font-black text-purple-600 mb-2">{userDetails.score}</div>
+                      <div className="text-sm font-bold">⚡ Total Points</div>
                     </div>
                   </div>
 
-                  <h4 className="text-lg font-bold mb-3">Recent Activity</h4>
-                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                  <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+                    <span>📊</span> Recent Activity
+                  </h4>
+                  <div className="space-y-3 max-h-60 overflow-y-auto">
                     {userDetails.actions.map((action, index) => (
                       <div
                         key={index}
-                        className="p-3 border-2 border-black bg-gray-100 rounded-lg text-sm"
+                        className="p-4 border-2 border-black bg-gradient-to-r from-gray-50 to-gray-100 neobrutalist-shadow rounded-lg"
                       >
-                        <div className="font-bold">{action.action}</div>
+                        <div className="font-bold text-sm mb-1">{action.action}</div>
                         <div className="flex justify-between text-xs text-gray-600">
-                          <span>+{action.points} points</span>
+                          <span className="px-2 py-1 bg-green-200 border border-black rounded font-bold">
+                            +{action.points} points
+                          </span>
                           <span>{new Date(action.timestamp).toLocaleDateString()}</span>
                         </div>
                       </div>
                     ))}
                     {userDetails.actions.length === 0 && (
-                      <div className="text-center text-gray-500 py-4">
-                        No recent activity
+                      <div className="text-center text-gray-500 py-8 border-2 border-dashed border-gray-300 rounded-lg">
+                        <div className="text-3xl mb-2">📭</div>
+                        <div>No recent activity</div>
                       </div>
                     )}
                   </div>
-                </div>
+                </motion.div>
               </motion.div>
             )}
-          </div>
-        </div>
-      </motion.div>
-    </main>
+          </motion.div>
+        </main>
+      </div>
+    </div>
   );
 }
