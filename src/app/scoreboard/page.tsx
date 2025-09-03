@@ -196,70 +196,79 @@ export default function ScoreboardPage() {
                 </div>
               </div>
 
-              {/* Enhanced Sidebar */}
+              {/* Scoring System Information */}
               <div className="lg:col-span-1 space-y-6">
-                {/* Points System */}
                 {pointsSystem && (
                   <div className="sticky top-24">
                     <h2 className="text-xl md:text-2xl font-black mb-6 px-4 py-3 border-4 border-black bg-white neobrutalist-shadow-lg inline-block rounded-xl">
-                      🎮 Points System
+                      🎮 Scoring System
                     </h2>
-                    <div className="space-y-3">
-                      <motion.div 
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.1 }}
-                        className="p-4 border-4 border-black bg-gradient-to-br from-pink-200 to-pink-300 neobrutalist-shadow rounded-xl hover-lift"
-                      >
-                        <div className="flex items-center gap-2 text-sm font-bold mb-1">
-                          <span>📝</span> Create Issue
-                        </div>
-                        <div className="text-2xl font-black text-purple-600">+{pointsSystem.CREATE_ISSUE}</div>
-                      </motion.div>
-                      <motion.div 
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.2 }}
-                        className="p-4 border-4 border-black bg-gradient-to-br from-blue-200 to-blue-300 neobrutalist-shadow rounded-xl hover-lift"
-                      >
-                        <div className="flex items-center gap-2 text-sm font-bold mb-1">
-                          <span>🔀</span> Open Pull Request
-                        </div>
-                        <div className="text-2xl font-black text-purple-600">+{pointsSystem.OPEN_PULL_REQUEST}</div>
-                      </motion.div>
-                      <motion.div 
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.3 }}
-                        className="p-4 border-4 border-black bg-gradient-to-br from-purple-200 to-purple-300 neobrutalist-shadow rounded-xl hover-lift"
-                      >
-                        <div className="flex items-center gap-2 text-sm font-bold mb-1">
-                          <span>👀</span> Review PR
-                        </div>
-                        <div className="text-2xl font-black text-purple-600">+{pointsSystem.REVIEW_PULL_REQUEST}</div>
-                      </motion.div>
-                      <motion.div 
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.4 }}
-                        className="p-4 border-4 border-black bg-gradient-to-br from-green-200 to-green-300 neobrutalist-shadow rounded-xl hover-lift"
-                      >
-                        <div className="flex items-center gap-2 text-sm font-bold mb-1">
-                          <span>✅</span> Merge PR
-                        </div>
-                        <div className="text-2xl font-black text-purple-600">+{pointsSystem.MERGE_PULL_REQUEST}</div>
-                      </motion.div>
-                      <motion.div 
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.5 }}
-                        className="p-4 border-4 border-black bg-gradient-to-br from-orange-200 to-orange-300 neobrutalist-shadow rounded-xl hover-lift"
-                      >
-                        <div className="flex items-center gap-2 text-sm font-bold mb-1">
-                          <span>🔒</span> Close Issue/PR
-                        </div>
-                        <div className="text-2xl font-black text-purple-600">+{pointsSystem.CLOSE_ISSUE_OR_PR}</div>
-                      </motion.div>
+                    
+                    {/* Issue Difficulty Levels */}
+                    <div>
+                      <h3 className="text-lg font-bold mb-3 text-gray-800">🏷️ Issue Difficulty Bonus</h3>
+                      <div className="space-y-2">
+                        <motion.div 
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.1 }}
+                          className="p-2 border-2 border-black bg-gradient-to-r from-green-100 to-green-200 neobrutalist-shadow-sm rounded-lg"
+                        >
+                          <div className="flex justify-between items-center">
+                            <span className="font-bold text-xs">🟢 Level 1 (Easy)</span>
+                            <span className="font-black text-green-600 text-sm">+10</span>
+                          </div>
+                        </motion.div>
+                        <motion.div 
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.2 }}
+                          className="p-2 border-2 border-black bg-gradient-to-r from-yellow-100 to-yellow-200 neobrutalist-shadow-sm rounded-lg"
+                        >
+                          <div className="flex justify-between items-center">
+                            <span className="font-bold text-xs">🟡 Level 2 (Medium)</span>
+                            <span className="font-black text-yellow-600 text-sm">+20</span>
+                          </div>
+                        </motion.div>
+                        <motion.div 
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.3 }}
+                          className="p-2 border-2 border-black bg-gradient-to-r from-orange-100 to-orange-200 neobrutalist-shadow-sm rounded-lg"
+                        >
+                          <div className="flex justify-between items-center">
+                            <span className="font-bold text-xs">🟠 Level 3 (Hard)</span>
+                            <span className="font-black text-orange-600 text-sm">+30</span>
+                          </div>
+                        </motion.div>
+                        <motion.div 
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.4 }}
+                          className="p-2 border-2 border-black bg-gradient-to-r from-red-100 to-red-200 neobrutalist-shadow-sm rounded-lg"
+                        >
+                          <div className="flex justify-between items-center">
+                            <span className="font-bold text-xs">🔴 Level 4 (Expert)</span>
+                            <span className="font-black text-red-600 text-sm">+40</span>
+                          </div>
+                        </motion.div>
+                        <motion.div 
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.5 }}
+                          className="p-2 border-2 border-black bg-gradient-to-r from-purple-100 to-purple-200 neobrutalist-shadow-sm rounded-lg"
+                        >
+                          <div className="flex justify-between items-center">
+                            <span className="font-bold text-xs">🟣 Level 5 (Master)</span>
+                            <span className="font-black text-purple-600 text-sm">+50</span>
+                          </div>
+                        </motion.div>
+                      </div>
+                      <div className="mt-3 p-2 bg-blue-50 border-2 border-dashed border-blue-300 rounded-lg">
+                        <p className="text-xs text-blue-700 font-medium">
+                          💡 Issue points are added as bonus based on difficulty level!
+                        </p>
+                      </div>
                     </div>
                   </div>
                 )}
