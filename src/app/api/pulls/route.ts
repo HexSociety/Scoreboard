@@ -2,6 +2,7 @@
 import axios from "axios";
 import { owner, repo } from "../url";
 import { leaderboardService, POINTS } from "../redis";
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 
 const levelScores: Record<string, number> = {
   level1: 10,
@@ -34,9 +35,7 @@ export async function GET() {
   const { data: issuesData } = await axios.get<GitHubIssue[]>(
     `https://api.github.com/repos/${owner}/${repo}/issues?state=all&per_page=100`,
     {
-      headers: {
-        Authorization: `Bearer ${process.env.GITHUB_SECRET}`,
-      },
+      headers: GITHUB_TOKEN ? { Authorization: `token ${GITHUB_TOKEN}` } : undefined,
     }
   );
   const issueMap: Record<number, { level: string; score: number }> = {};
@@ -57,7 +56,7 @@ export async function GET() {
     `https://api.github.com/repos/${owner}/${repo}/pulls?state=all`,
     {
       headers: {
-        Authorization: `Bearer ${"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"}`,
+        Authorization: `token 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`,
       },
     }
   );

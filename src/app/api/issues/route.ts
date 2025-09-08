@@ -2,6 +2,8 @@
 import axios from "axios";
 import { owner, repo } from "../url";
 
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+
 function excerptFromBody(body: string | null, max = 220) {
   if (!body) return "";
   // strip basic markdown (images/links) and HTML tags
@@ -16,12 +18,11 @@ function excerptFromBody(body: string | null, max = 220) {
 }
 
 export async function GET() {
+
   const { data } = await axios.get(
     `https://api.github.com/repos/${owner}/${repo}/issues?state=all&per_page=100`,
     {
-      headers: {
-        Authorization: `Bearer ${process.env.GITHUB_SECRET}`,
-      },
+      headers: GITHUB_TOKEN ? { Authorization: `token ${GITHUB_TOKEN}` } : undefined,
     }
   );
 
