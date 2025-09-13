@@ -31,6 +31,14 @@ type GitHubPull = {
 };
 
 export async function GET() {
+  // Debug: Check if token is loaded
+  console.log('GITHUB_TOKEN exists:', !!GITHUB_TOKEN);
+  console.log('GITHUB_TOKEN length:', GITHUB_TOKEN?.length || 0);
+  
+  if (!GITHUB_TOKEN) {
+    return Response.json({ error: 'GITHUB_TOKEN not configured' }, { status: 500 });
+  }
+
   // Fetch issues
   const { data: issuesData } = await axios.get<GitHubIssue[]>(
     `https://api.github.com/repos/${owner}/${repo}/issues?state=all&per_page=100`,
@@ -51,13 +59,11 @@ export async function GET() {
       }
     });
 
-  // Fetch PRs
+  // Fetch PRs - FIXED: Use environment variable instead of hardcoded token
   const { data: pullsData } = await axios.get<GitHubPull[]>(
     `https://api.github.com/repos/${owner}/${repo}/pulls?state=all`,
     {
-      headers: {
-        Authorization: `token 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`,
-      },
+      headers: GITHUB_TOKEN ? { Authorization: `token ${GITHUB_TOKEN}` } : undefined,
     }
   );
 
