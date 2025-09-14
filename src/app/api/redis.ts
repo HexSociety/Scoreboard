@@ -77,7 +77,15 @@ export async function getRedisClient(): Promise<RedisClientType | null> {
 
 // Points system constants
 export const POINTS = {
-  MERGED_PR: 20,  // Only merged PRs get points
+  MERGED_PR: 10,  // Base points for merged PRs
+  // Level-based points for issues
+  LEVEL_POINTS: {
+    level1: 10,
+    level2: 20,
+    level3: 30,
+    level4: 40,
+    level5: 50,
+  }
 } as const;
 
 // Leaderboard operations - Redis only, no fallbacks
