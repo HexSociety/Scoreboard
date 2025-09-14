@@ -63,19 +63,21 @@ export async function GET() {
 
     const pulls = pullsData.map((pull) => {
       const issueRegex = /#(\d+)/g;
-      const matches = [...(pull.body?.matchAll(issueRegex) || [])];
+      // Check both PR title and body for issue references
+      const bodyMatches = [...(pull.body?.matchAll(issueRegex) || [])];
+      const titleMatches = [...(pull.title?.matchAll(issueRegex) || [])];
+      const matches = [...bodyMatches, ...titleMatches];
 
       let totalScore = 0;
       const levels: string[] = [];
 
-      // Only count points for merged PRs
+      // Only count points for merged PRs that solve issues
       if (pull.merged_at) {
-        // Add base points for merged PR
-        totalScore += POINTS.MERGED_PR;
-
-        // Add level-based points for linked issues
-        matches.forEach((m) => {
-          const issueNum = parseInt(m[1]);
+        // Get unique issue numbers (avoid counting duplicates if same issue mentioned in title and body)
+        const uniqueIssueNumbers = [...new Set(matches.map(m => parseInt(m[1])))];
+        
+        // Add level-based points for linked issues only
+        uniqueIssueNumbers.forEach((issueNum) => {
           if (issueMap[issueNum]) {
             levels.push(issueMap[issueNum].level);
             totalScore += issueMap[issueNum].score;
