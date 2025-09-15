@@ -1,16 +1,23 @@
 "use client";
 import Link from "next/link";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 
 const Navbar = () => {
   const pathname = usePathname();
-
+  const [isAdmin, setIsAdmin] = useState(false);
+  useEffect(() => {
+    // Check if the user is an admin
+    const userRole = localStorage.getItem("userRole");
+    if (userRole === "admin") {
+      setIsAdmin(true);
+    }
+  }, []);
   const navItems = [
     { href: "/", label: "🏠 Home", color: "bg-pink-400 hover:bg-pink-500" },
     { href: "/issues", label: "🐛 Issues", color: "bg-green-400 hover:bg-green-500" },
-    { href: "/pulls", label: "🔀 Pulls", color: "bg-blue-400 hover:bg-blue-500" },
-    { href: "/scoreboard", label: "🏆 Scoreboard", color: "bg-orange-400 hover:bg-orange-500" },
+    { href: "/pulls", label: "🔀 Pulls", color: "bg-blue-400 hover:bg-blue-500", adminOnly: true },
+    { href: "/scoreboard", label: "🏆 Scoreboard", color: "bg-orange-400 hover:bg-orange-500", adminOnly: true },
   ];
 
   const developers = [
@@ -35,6 +42,7 @@ const Navbar = () => {
       }
     }
   ];
+  const visibleNavItems = navItems.filter(item => !item.adminOnly || isAdmin);
 
   return (
     <div className="fixed top-6 left-0 right-0 z-50 px-6">
@@ -86,7 +94,7 @@ const Navbar = () => {
             </h1>
           </div>
           <div className="flex gap-1 sm:gap-2">
-            {navItems.map((item) => (
+            {visibleNavItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
@@ -99,12 +107,13 @@ const Navbar = () => {
                   }
                 `}
               >
-                <span className="sm:hidden">{item.label.split(' ')[0]}</span>
+                <span className="sm:hidden">{item.label.split(" ")[0]}</span>
                 <span className="hidden sm:inline">{item.label}</span>
               </Link>
             ))}
           </div>
         </nav>
+
 
         {/* Right Developer Box - Hidden on smaller screens */}
         <div className="hidden lg:block bg-white/95 border-4 border-black rounded-xl neobrutalist-shadow p-4 backdrop-blur-sm">
